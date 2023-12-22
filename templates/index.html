@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <title>Camera</title>
+      <style>
+          body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }
+
+            header {
+                background-color: #333;
+                color: #fff;
+                text-align: center;
+                padding: 10px 0;
+            }
+
+            #header {
+                line-height: 0px;
+            }
+
+            #main-content {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                margin: 120px auto;
+            }
+
+            #counter-container {
+                background-color: #fff;
+                min-width: 600px;
+                padding: 6px 20px;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+
+            #areaLength {
+                padding: 0px;
+                line-height: 0px;
+            }
+
+            #video-container {
+                margin-top: 20px;
+            }
+
+            #video-feed {
+                width: 100%;
+                max-height: 480px;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+            }
+
+            #video {
+                max-width: 800px;
+                padding: 10px;
+            }
+
+            footer {
+                text-align: center;
+                margin-top: 20px;
+                padding: 10px 0;
+                background-color: #333;
+                color: #fff;
+            }
+
+              /* Custom styles for the new input and button */
+              #ipInput,
+              #usernameInput,
+              #passwordInput {
+                  width: 100%;
+                  padding: 10px;
+                  margin: 10px 0;
+                  box-sizing: border-box;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+              }
+
+              button {
+                  background-color: #4caf50;
+                  color: #fff;
+                  padding: 10px 20px;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+              }
+
+              button:hover {
+                  background-color: #45a049;
+              }
+
+              label {
+                  display: block;
+                    min-width: 140px;
+                    text-align: start;
+              }
+
+              select {
+                  width: 100%;
+                  padding: 10px;
+                  margin: 10px 0;
+                  box-sizing: border-box;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+              }
+
+          #wrapper-hang {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+          }
+
+          #eye {
+            width: 25px;
+            height: 20px;
+            padding: 0 10px;
+          }
+
+          #wrapper-eye {
+            display: flex;
+            align-items: center;
+            position: relative;
+          }
+
+          #togglePassword {
+            align-items: end;
+            display: flex;
+            position: absolute;
+            right: 0;
+          }
+
+          .dx {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+          }
+
+          .text-dx {
+    margin-right: 30px;
+    font-size: 14px;
+    color: #b2b2ec;
+    cursor: pointer;
+          }
+
+          .header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+          }
+
+      </style>
+  </head>
+  <body>
+    <header class="header">
+        <h1 id="header">People Counter</h1>
+        <div class="dx">
+            <span class="text-dx" onclick="dx()">Đăng xuất</span>
+        </div>
+    </header>
+    <section id="main-content">
+        <div id="counter-container">
+            <h1 id="areaLength">Camera</h1>
+            <!-- New input fields and button -->
+            <div id="wrapper-hang">
+                <label for="cameraBrand">Hãng Camera:</label>
+                <select id="cameraBrand">
+                    <option value="hikvision">Hikvision</option>
+                    <option value="dahua">Dahua</option>
+                    <option value="axis">Axis</option>
+                    <option value="foscam">Foscam</option>
+                    <option value="tapo">Tapo</option>
+                    <option value="avigilon">Avigilon</option>
+                    <option value="sony">Sony</option>
+                    <option value="vivotek">Vivotek</option>
+                    <option value="uniFi">UniFi</option>
+                    <option value="lorex">Lorex</option>
+                    <!-- Add more options as needed -->
+                </select>
+            </div>
+            <input type="text" id="ipInput" placeholder="IP camera">
+            <input type="text" id="usernameInput" placeholder="Username">
+            <div id="wrapper-eye">
+                <input type="password" id="passwordInput" placeholder="Password">
+                <span id="togglePassword" onclick="togglePasswordVisibility()">
+                    <img id="eye" src="https://www.freeiconspng.com/thumbs/eye-icon/eyeball-icon-png-eye-icon-1.png" alt="Toggle Password Visibility">
+                </span>
+            </div>
+            <button onclick="connectToCamera()">Connect</button>
+        </div>
+        <div id="video-container">
+            <img id="video" src="{{ url_for('video_feed') }}">
+        </div>
+    </section>
+    <footer>
+        <p>&copy; 2023 People Counter</p>
+    </footer>
+    <script>
+        function dx() {
+
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "/login";
+                }
+            })
+            .catch(error => alert(error));
+        }
+
+        function connectToCamera() {
+            // Get input values
+            var ip = document.getElementById("ipInput").value;
+            var username = document.getElementById("usernameInput").value;
+            var password = document.getElementById("passwordInput").value;
+            var path = document.getElementById("cameraBrand").value;
+
+            // Create an object with the data
+            var data = {
+                ip: ip,
+                username: username,
+                password: password,
+                path: path
+            };
+
+            console.log(data)
+
+            // Use fetch to send the data to the backend
+            fetch('/connect_camera', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                // Handle success if needed
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                // Handle error if needed
+            });
+        }
+
+        function togglePasswordVisibility() {
+            var passwordInput = document.getElementById("passwordInput");
+            var toggleIcon = document.getElementById("togglePassword");
+
+            // Đổi kiểu của trường input password
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.innerHTML = '<img id="eye" src="https://static-00.iconduck.com/assets.00/eye-password-hide-icon-2048x2048-c8pmhg0p.png" alt="Toggle Password Visibility">';
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.innerHTML = '<img id="eye" src="https://www.freeiconspng.com/thumbs/eye-icon/eyeball-icon-png-eye-icon-1.png" alt="Toggle Password Visibility">';
+            }
+        }
+    </script>
+  </body>
+</html>
